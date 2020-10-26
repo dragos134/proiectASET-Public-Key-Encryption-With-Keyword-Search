@@ -7,6 +7,6 @@ proiect aset
 **Coordinator**: *Lecturer, Ph.D. Sorin Iftene*
 
 **Team Members**:
-- *Dragos Ciocan (e-mail)*
+- *Dragos Ciocan (ciocan.dragos13@gmail.com)*
 - *Emanuel Dodu (e-mail)*
 - *Andrei Cristian (andrei.cristian1@info.uaic.ro)*
