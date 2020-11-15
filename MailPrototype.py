@@ -1,4 +1,5 @@
 import copy
+from Models import Mail
 # Creational design pattern - Prototype
 class MailPrototype:
 
@@ -16,7 +17,7 @@ class MailPrototype:
 
 class Draft(MailPrototype):
 
-    def __init__(self, Mail):
+    def __init__(self, Mail : Mail):
         self._type = "Draft"
         self._value = Mail
 
@@ -25,8 +26,17 @@ class Draft(MailPrototype):
 
 class Forward(MailPrototype):
 
-    def __init__(self, Mail):
+    def __init__(self, Mail : Mail):
         self._type = "Forward"
+        self._value = Mail
+
+    def clone(self):
+        return copy.copy(self)
+
+class Sent(MailPrototype):
+
+    def __init__(self, Mail : Mail):
+        self._type = "Sent"
         self._value = Mail
 
     def clone(self):
