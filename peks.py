@@ -2,6 +2,7 @@ from aspects import log_errors
 
 import cryptography
 import hashlib
+import curve25519
 # Construction using bilinear maps
 class PEKSClient:
     # Takes a security parameter, s, and generates a public/private key pair
