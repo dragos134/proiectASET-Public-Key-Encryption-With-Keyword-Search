@@ -1,6 +1,6 @@
 from aspectlib import Aspect
 
-@aspectlib.Aspect
+@Aspect
 def log_errors(*args, **kwargs):
     try:
         yield

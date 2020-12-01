@@ -11,7 +11,6 @@ class Curve:
         A = 486662
         h = 8 # cofactor
         q = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
-        private_key, public_key = self.generateKeypair()
 
     @log_errors
     def inverse_mod(self, number):
