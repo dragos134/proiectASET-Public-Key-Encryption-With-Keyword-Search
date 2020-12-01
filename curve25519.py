@@ -2,8 +2,9 @@ from aspects import log_errors
 
 from secrets import randbelow
 
+# https://martin.kleppmann.com/papers/curve25519.pdf
 class Curve:
-    # https://martin.kleppmann.com/papers/curve25519.pdf
+
     def __init__(self):
         name = "x25519" # Montgomery curve
         p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed
@@ -35,16 +36,35 @@ class Curve:
         return (y**2 - x**3 - self.A*(x**2) - x) % self.p == 0
 
     @log_errors
-    def negatePoint(self, point):
+    def inversePoint(self, point):
         '''Returns -point'''
-        assert is_on_curve(point)
+        assert self.onCurve(point)
 
         if point is None:
             return None
 
         x, y = point
-        negation = (x, -y % self.p)
+        inverse = (x, -y % self.p)
 
-        assert is_on_curve(negation)
+        assert self.onCurve(inverse)
 
-        return negation
+        return inverse
+
+    @log_errors
+    def scalarMult(self, point, scalar):
+        return None
+
+    @log_errors
+    def scalarMultBase(self, scalar):
+        _point = (9,)
+        return self.scalarMult(_point, scalar)
+
+    @log_errors
+    def generateKeypair(self):
+        private_key = randbelow(self.q) + 1
+        public_key  = self.scalarMultBase(private_key)
+
+    # call x25519 to produce shared secret.
+    @log_errors
+    def x25519(self, public_key, private_key):
+        return self.scalarMult(private_key, public_key)
