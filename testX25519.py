@@ -34,10 +34,23 @@ class TestX25519(unittest.TestCase):
         x25519.unpack25519(field_elem_out, 5-3)
         self.assertEqual(field_elem_r, field_elem_out, "Faulty substraction")
 
+    def test_mul(self):
+        a = []
+        b = []
+        field_elem_r = []
+        field_elem_out = []
+        x25519.unpack25519(a, 5)
+        x25519.unpack25519(b, 3)
+        x25519.fmul(field_elem_r, a, b)
+        x25519.unpack25519(field_elem_out, 5*3)
+        self.assertEqual(field_elem_r, field_elem_out, "Faulty multiplication")
+
     def test_generate_keypair(self):
         pk = list()
         sk = list()
         x25519.generate_keypair(pk, sk)
+        self.assertNotEqual(pk, list(), "Faulty keygeneration; pk is empty.")
+        self.assertNotEqual(sk, list(), "Faulty keygeneration; sk is empty.")
 
 if __name__ == '__main__':
     unittest.main()

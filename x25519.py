@@ -6,6 +6,8 @@ typedef i64 field_elem[16];
 
 from secrets import randbelow
 
+from aspects import timeout
+
 q = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
 
 BYTE_ORDER = "little"
@@ -30,27 +32,27 @@ def unpack25519(field_elem_out, u8_in32):
 def carry25519(field_elem):
     for i in range(16):
         carry = field_elem[i] >> 16
-        field_elem[i] -= carry << 16
+        field_elem[i] -= carry
         if (i < 15):
-            elem[i + 1] += carry
+            field_elem[i + 1] += carry
         else:
-            elem[0] += 38 * carry
+            field_elem[0] += 38 * carry
 
 # out = a + b
 def fadd(field_elem_out, field_elem_a, field_elem_b):
-    field_elem_out.clear()
     [ field_elem_out.append(field_elem_a[i] + field_elem_b[i])
     for i in range(16) ]
+    field_elem_out = field_elem_out[:-17:-1]
 
 # out = a - b
 def fsub(field_elem_out, field_elem_a, field_elem_b):
-    field_elem_out.clear()
     [ field_elem_out.append(field_elem_a[i] - field_elem_b[i])
     for i in range(16) ]
+    field_elem_out = field_elem_out[:-17:-1]
 
 def fmul(field_elem_out, field_elem_a, field_elem_b):
     product = [0] * 31
-    field_elem_out.clear()
+    result = list()
 
     for i in range(16):
         for j in range(16):
@@ -59,8 +61,9 @@ def fmul(field_elem_out, field_elem_a, field_elem_b):
     for i in range(15):
         product[i] += 38 * product[i+16]
 
-    field_elem_out = product[:16]
-
+    product = product[:16]
+    field_elem_out.clear()
+    [ field_elem_out.append(product[i]) for i in range(16)]
     carry25519(field_elem_out)
     carry25519(field_elem_out)
 
@@ -79,7 +82,6 @@ def swap25519(field_elem_p, field_elem_q, bit):
         t = c & (field_elem_p[i] ^ field_elem_q[i])
         field_elem_p[i] ^= t
         field_elem_q[i] ^= t
-        # problem is it should use .append, .insert, pop()
 
 def pack25519(u8_out32, field_elem_int):
     u8_out32.clear()
@@ -124,7 +126,7 @@ def scalarmult(u8_out, u8_scalar, u8_point):
     clamped[0] &= 0xf8
     clamped[31] = (clamped[31] & 0x7f) | 0x40
     unpack25519(x, u8_point)
-    b = x.copy
+    b = x.copy()
     [c.append(0) for i in range(16)]
     d = [1]
     a = [1]
