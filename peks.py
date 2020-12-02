@@ -5,12 +5,15 @@ import hashlib
 import curve25519
 # Construction using bilinear maps
 class PEKSClient:
-    # Takes a security parameter, s, and generates a public/private key pair
-    # A_pub, A_priv
+    def __init__(self):
+        self._curve = curve25519.Curve()
+        self.priv = None
+        self.publ = None
+        
+    # Generates a public/private key pair (private, public)
     @log_errors
-    def KeyGen(self, s):
-        A_pub, A_priv
-        return A_pub, A_priv
+    def KeyGen(self):
+        self.priv, self.publ =  self._curve.generateKeypair()
     # For a public key A_pub and a word W, produces a searchable encryption of W
     @log_errors
     def PEKS(self, A_pub, W):
