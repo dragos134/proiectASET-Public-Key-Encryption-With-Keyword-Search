@@ -101,20 +101,20 @@ class Curve:
 
         _121665 = 0xDB41
         clamped = bytearray(32)
-        scalar = scalar.to_bytes(32, "big")
+        scalar = scalar.to_bytes(32, "little")
         for i in range(32):
             clamped[i] = scalar[i]
         clamped[0] &= 0xf8
         clamped[31] = (clamped[31] & 0x7f) | 0x40
 
         x = point[0]
-        # b = x.to_bytes(16, "big")
+        # b = x.to_bytes(16, "little")
         b = x
         c = 0
         d = a = bytearray(16)
         a[0] = d[0] = 1
-        a = int.from_bytes(a, "big")
-        d = int.from_bytes(d, "big")
+        a = int.from_bytes(a, "little")
+        d = int.from_bytes(d, "little")
 
         for i in range(254,-1,-1):
             bit = (clamped[i>>3] >> (i & 7)) & 1
@@ -150,7 +150,7 @@ class Curve:
 
     @log_errors
     def generateKeypair(self):
-        private_key = randbelow(self.q) + 1
+        private_key = randbelow(self.q - 1) + 1
         public_key  = self.scalarMultBase(private_key)
         return (private_key, public_key)
 
