@@ -19,7 +19,10 @@ _121665 = [0xDB41, 1]
 
 def unpack25519(field_elem_out, u8_in32):
     field_elem_out.clear()
-    u8_in = u8_in32.to_bytes(32, BYTE_ORDER)
+    if type(u8_in32) == type(list()):
+        u8_in = u8_in32.copy()
+    else:
+        u8_in = u8_in32.to_bytes(32, BYTE_ORDER)
     [field_elem_out.append(u8_in[2*i] + (u8_in[2*i + 1] << 8))
     for i in range(16)]
     field_elem_out[15] &= 0x7fff
@@ -73,9 +76,10 @@ def finverse(field_elem_out, field_elem_in):
 def swap25519(field_elem_p, field_elem_q, bit):
     c = ~(bit - 1)
     for i in range(16):
-        t = c & (p[i] ^ q[i])
-        p[i] ^= t
-        q[i] ^= t
+        t = c & (field_elem_p[i] ^ field_elem_q[i])
+        field_elem_p[i] ^= t
+        field_elem_q[i] ^= t
+        # problem is it should use .append, .insert, pop()
 
 def pack25519(u8_out32, field_elem_int):
     u8_out32.clear()
