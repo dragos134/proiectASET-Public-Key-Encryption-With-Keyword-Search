@@ -1,8 +1,11 @@
 import unittest
+from timeout_decorator import timeout
 
 import x25519
 
 p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed
+
+FUNC_TIMEOUT = 120
 
 class TestX25519(unittest.TestCase):
 
@@ -45,6 +48,7 @@ class TestX25519(unittest.TestCase):
         x25519.unpack25519(field_elem_out, 5*3)
         self.assertEqual(field_elem_r, field_elem_out, "Faulty multiplication")
 
+    @timeout(FUNC_TIMEOUT, use_signals=False)
     def test_generate_keypair(self):
         pk = list()
         sk = list()

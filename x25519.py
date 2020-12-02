@@ -6,8 +6,6 @@ typedef i64 field_elem[16];
 
 from secrets import randbelow
 
-from aspects import timeout
-
 q = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
 
 BYTE_ORDER = "little"
