@@ -4,22 +4,21 @@ from secrets import randbelow
 
 @log_errors
 def swap25519(a, b, bit):
-    t = i = c = ~(bit-1)
-
-    for i in range(16):
-        t = c & (a[i*16:i*16+16] ^ b[i*16:i*16+16])
-        a[i] ^= t
-        b[i] ^= t
+    c = ~(bit-1)
+    t = c & (a ^ b)
+    a ^= t
+    b ^= t
+    return (a, b)
 
 # https://martin.kleppmann.com/papers/curve25519.pdf
 class Curve:
 
     def __init__(self):
-        name = "x25519" # Montgomery curve
-        p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed
-        A = 486662
-        h = 8 # cofactor
-        q = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
+        self.name = "x25519" # Montgomery curve
+        self.p = 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed
+        self.A = 486662
+        self.h = 8 # cofactor
+        self.q = 0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3ed
 
 
     @log_errors
@@ -80,20 +79,19 @@ class Curve:
         if x1 == x2:
             x3 = (((3 * x1**2 + 2 * self.A * x1 + 1) / 2 * y1)**2 - self.A \
             - 2 * x1) % self.p
-            y3 = ((2 * x1 + x2 + self.A)*(3 * x1**2 + 2 * self.A * x1 + 1) \
-            / 2 * y1 - ((3 * x1**2 + 2 * self.A * x1 + 1) / 2 * y1)**3 - y1) \
-            % self.p
+            # y3 = ((2 * x1 + x2 + self.A)*(3 * x1**2 + 2 * self.A * x1 + 1) \
+            # / 2 * y1 - ((3 * x1**2 + 2 * self.A * x1 + 1) / 2 * y1)**3 - y1) \
+            # % self.p
         else:
             x3 = (((y2 - y1) / (x2 - x1))**2 - self.A - x1 - x2) % self.p
-            y3 = ((2 * x1 + x2 + self.A)*(y2 - y1) / (x2 - x1) - ((y2 - y1) \
-            / (x2 - x1))**3 - y1) % self.p
+            # y3 = ((2 * x1 + x2 + self.A)*(y2 - y1) / (x2 - x1) - ((y2 - y1) \
+            # / (x2 - x1))**3 - y1) % self.p
 
         return (x3, y3)
 
+    # The Montgomery ladder for scalar multiplication.
     @log_errors
     def scalarMult(self, point, scalar):
-
-        assert self.onCurve(point)
 
         if scalar % self.q == 0 or point is None:
             return None
@@ -102,74 +100,52 @@ class Curve:
             return self.scalarMult(-scalar, self.inversePoint(point))
 
         _121665 = 0xDB41
-        clamped = scalar.to_bytes(32, "big")
+        clamped = bytearray(32)
+        scalar = scalar.to_bytes(32, "big")
+        for i in range(32):
+            clamped[i] = scalar[i]
         clamped[0] &= 0xf8
         clamped[31] = (clamped[31] & 0x7f) | 0x40
 
         x = point[0]
-
-        b = x.to_bytes(16, "big")
-        d = a = c = (0).to_bytes(16*8, "big")
+        # b = x.to_bytes(16, "big")
+        b = x
+        c = 0
+        d = a = bytearray(16)
         a[0] = d[0] = 1
+        a = int.from_bytes(a, "big")
+        d = int.from_bytes(d, "big")
 
         for i in range(254,-1,-1):
             bit = (clamped[i>>3] >> (i & 7)) & 1
-            swap25519(a, b, bit)
-            swap25519(c, d, bit)
-            a = int.from_bytes(a, "big")
-            b = int.from_bytes(b, "big")
-            c = int.from_bytes(c, "big")
-            d = int.from_bytes(d, "big")
-            e = a + c % p
-            a = a - c % p
-            c = b + d % p
-            b = b - d % p
-            d = e**2 % p
-            f = a**2 % p
-            a = c * a % p
-            c = b * e % p
-            e = a + c % p
-            a = a - c % p
-            b = a**2 % p
-            c = d - f % p
-            a = c * _121665 % p
-            a = a + d % p
-            c = c * a % p
-            a = d * f % p
-            d = b * x % p
-            b = e**2 % p
-            a = a.to_bytes(16, "big")
-            b = b.to_bytes(16, "big")
-            c = c.to_bytes(16, "big")
-            d = d.to_bytes(16, "big")
+            a, b = swap25519(a, b, bit)
+            c, d = swap25519(c, d, bit)
+            e = a + c % self.p
+            a = a - c % self.p
+            c = b + d % self.p
+            b = b - d % self.p
+            d = e**2 % self.p
+            f = a**2 % self.p
+            a = c * a % self.p
+            c = b * e % self.p
+            e = a + c % self.p
+            a = a - c % self.p
+            b = a**2 % self.p
+            c = d - f % self.p
+            a = c * _121665 % self.p
+            a = a + d % self.p
+            c = c * a % self.p
+            a = d * f % self.p
+            d = b * x % self.p
+            b = e**2 % self.p
 
-
-
-
-        # if scalar % self.q == 0 or point is None:
-        #     return None
-        #
-        # if scalar < 0:
-        #     return self.scalarMult(-scalar, self.inversePoint(point))
-        #
-        # result = None
-        # temp = point
-        #
-        # while scalar:
-        #     if scalar & 1:
-        #         result = self.pointAdd(result, temp)
-        #
-        #     temp = self.pointAdd(temp, temp)
-        #
-        #     scalar >>= 1
-
-        assert self.onCurve(result)
-
-        return result
+        c = self.inverse_mod(c)
+        a *= c % self.p
+        return a
 
     @log_errors
     def scalarMultBase(self, scalar):
-        _point = (9,)
+        _point = (9, None)
         return self.scalarMult(_point, scalar)
 
     @log_errors
